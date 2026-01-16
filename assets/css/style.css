@@ -1,0 +1,13 @@
+:root {
+    --primary-blue: #1A365D;
+    --secondary-orange: #F6AD55;
+    --accent-red: #D9262E;
+}
+
+body { background-color: #ffffff; font-family: 'Inter', sans-serif; }
+.navbar { background-color: var(--primary-blue) !important; }
+.btn-primary { background-color: var(--primary-blue); border: none; }
+.btn-warning { background-color: var(--secondary-orange); color: white; }
+.btn-danger { background-color: var(--accent-red); }
+
+#map { height: 400px; width: 100%; border-radius: 8px; margin-bottom: 15px; }
