@@ -135,8 +135,6 @@ async function renderProjects() {
 
     for (const d of snap.docs) {
         const p = d.data();
-        let conName = "Loading...";
-        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><strong>${p.title}</strong><br><small>${p.category}</small></td>
