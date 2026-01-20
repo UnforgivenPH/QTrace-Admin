@@ -57,6 +57,15 @@
                     <input type="number" id="budget" class="form-control" required>
                 </div>
 
+                <div class="col-md-6">
+    <label class="form-label">Project Status</label>
+    <select id="status" class="form-select" required>
+        <option value="Ongoing" selected>Ongoing</option>
+        <option value="Finished">Finished</option>
+        <option value="Delayed">Delayed</option>
+    </select>
+</div>
+
                 <div class="col-12">
                     <label class="form-label text-primary fw-bold">Click on the map to pin project location</label>
                     <div id="map"></div>
@@ -103,12 +112,10 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Title</th>
-                            <th>Contractor</th>
-                            <th>Address</th>
-                            <th>Budget</th>
-                            <th>Status</th>
-                            <th class="text-center">Action</th>
+<th>Title</th>
+        <th>Contractor</th>
+        <th>Location</th> <th>Budget</th>
+        <th>Status</th>   <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody id="projectTableBody"></tbody>
