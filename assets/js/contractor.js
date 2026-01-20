@@ -4,11 +4,11 @@ import { collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic
 const contractorsCol = collection(db, 'contractors');
 const tableBody = document.getElementById('contractorTableBody');
 
-// --- 1. IMGBB UPLOAD LOGIC (No Billing) ---
+// --- 1. IMGBB UPLOAD LOGIC ---
 async function uploadToImgBB(file) {
-    if (!file) return "https://via.placeholder.com/50"; // Default if no logo
+    if (!file) return ""; // Return empty string if no file
     
-    const apiKey = '679c2ed64c23cfbde43bf6fdb94aaed6'; // GET YOUR KEY FROM api.imgbb.com
+    const apiKey = '679c2ed64c23cfbde43bf6fdb94aaed6';
     const formData = new FormData();
     formData.append('image', file);
 
@@ -21,7 +21,7 @@ async function uploadToImgBB(file) {
         return data.data.url;
     } catch (err) {
         console.error("ImgBB Error:", err);
-        return "https://via.placeholder.com/50";
+        return "";
     }
 }
 
@@ -35,19 +35,23 @@ window.deleteContractor = async (id) => {
 
 // --- 3. RENDER TABLE ---
 async function renderContractors() {
-    tableBody.innerHTML = '';
+    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
     const snap = await getDocs(contractorsCol);
+    tableBody.innerHTML = '';
     
     snap.forEach((document) => {
         const item = document.data();
         const id = document.id;
         
+        // Handle Logo (Check if it's an object or string for backward compatibility)
+        const logoUrl = item.logo && item.logo.path ? item.logo.path : (typeof item.logo === 'string' ? item.logo : '');
+
         tableBody.innerHTML += `
             <tr>
-                <td><img src="${item.logo.path}" width="50" height="50" class="rounded shadow-sm" style="object-fit:cover;"></td>
+                <td>${logoUrl ? `<img src="${logoUrl}" width="50" height="50" class="rounded shadow-sm" style="object-fit:cover;">` : 'No Logo'}</td>
                 <td><strong>${item.name}</strong><br><small class="text-muted">${item.email}</small></td>
                 <td>${item.contactPerson}<br><small>${item.phone}</small></td>
-                <td>${item.expertise.map(exp => `<span class="badge bg-light text-dark border">${exp}</span>`).join(' ')}</td>
+                <td>${Array.isArray(item.expertise) ? item.expertise.map(exp => `<span class="badge bg-light text-dark border">${exp}</span>`).join(' ') : item.expertise}</td>
                 <td class="text-center">
                     <button class="btn btn-outline-danger btn-sm" onclick="deleteContractor('${id}')">Delete</button>
                 </td>
@@ -61,28 +65,42 @@ document.getElementById('contractorForm').addEventListener('submit', async (e) =
     e.preventDefault();
     const btn = document.getElementById('saveBtn');
     btn.disabled = true;
-    btn.innerText = "Processing Logo...";
-
-    const logoFile = document.getElementById('logoInput').files[0];
-    const logoUrl = await uploadToImgBB(logoFile);
-
-    const contractorData = {
-        name: document.getElementById('compName').value,
-        contactPerson: document.getElementById('contactPerson').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        experience: document.getElementById('experience').value,
-        address: document.getElementById('address').value,
-        expertise: document.getElementById('expertise').value.split(',').map(s => s.trim()),
-        logo: { path: logoUrl },
-        documents: [] // You can add PDF logic here later
-    };
+    btn.innerText = "Processing...";
 
     try {
+        const logoFile = document.getElementById('logoInput').files[0];
+        const logoUrl = await uploadToImgBB(logoFile);
+
+        const compName = document.getElementById('compName').value;
+        const phoneVal = document.getElementById('phone').value;
+
+        const contractorData = {
+            name: compName,
+            contactPerson: document.getElementById('contactPerson').value,
+            email: document.getElementById('email').value,
+            phone: phoneVal,
+            experience: document.getElementById('experience').value, // Saved as String (matches DB)
+            address: document.getElementById('address').value,
+            
+            // Convert comma string to Array (matches DB)
+            expertise: document.getElementById('expertise').value.split(',').map(s => s.trim()).filter(i => i),
+            
+            // ✅ FIX: Save Logo as Object (matches Android Model)
+            logo: { 
+                path: logoUrl,
+                name: compName,
+                phone: phoneVal
+            },
+            
+            documents: [] 
+        };
+
         await addDoc(contractorsCol, contractorData);
         document.getElementById('contractorForm').reset();
+        alert("Contractor Saved!");
         renderContractors();
     } catch (error) {
+        console.error(error);
         alert("Error saving: " + error.message);
     } finally {
         btn.disabled = false;
